@@ -1,5 +1,5 @@
 ;**************************************************************************
-;		Monitoring a PIR (Pyro-IR) Motion Sensor
+;		MONITORING A PIR (PYRO-IR) MOTION SENSOR
 ; Aim:
 ;   - Activate a buzzer whenever motion is detected.
 
@@ -30,25 +30,20 @@
 ;--------------------------------------------------------------------------
 ; Main Program
 ;--------------------------------------------------------------------------
-
-PIR	equ	0x01	; Constant PIR = PORTB<1> (Motion Detection Input)
-BUZ	equ	0x02	; Constant BUZ = PORTD<2> (Relay switch)
-
 	org     0x0005
 
 start	bsf	STATUS, RP0	; Select Bank 1
-	bsf	TRISB, PIR	; Set TRISB<1> = 1 so PORTB<1> is an INPUT
-	bcf	TRISD, BUZ	; Set TRISD<2> = 0 so PORTD<2> is an OUTPUT
+	bsf	TRISB, RB1	; Set TRISB<1> = 1 so PORTB<1> is an INPUT
+	bcf	TRISD, RD2	; Set TRISD<2> = 0 so PORTD<2> is an OUTPUT
 	bcf	STATUS, RP0	; Select Bank 0
 
-; Monitor PIR - Motion is detected if PORTB<1> = 0
-again	bcf	PORTD, BUZ	; Turn the buzzer off
-	btfsc   PORTB, PIR	; Does PORTB<1> = 0? YES => Skip next instruction
-	goto	again		; NO => Keep monitoring for motion
-	bsf	PORTD, BUZ	; YES => Turn on buzzer
+monitor	bcf	PORTD, RD2	; Turn the buzzer off
+	btfsc   PORTB, RB1	; Does PORTB<1> = 0? YES => Skip next instruction
+	goto	monitor		; NO => Keep monitoring for motion
+	bsf	PORTD, RD2	; YES => Turn on buzzer
 
 	; TODO: Add delay to keep buzzer on for a minimum period.
 
-	goto    again		; Keep monitoring for motion
+	goto    monitor		; Keep monitoring for motion
 
         end
