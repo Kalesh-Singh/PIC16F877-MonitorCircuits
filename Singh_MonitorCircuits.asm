@@ -104,7 +104,6 @@ delay10ms   movlw	0x62		; Load d'98 into W			(1 cycle)
 	    movwf	Count10ms	; Move W into Count10ms			(1 cycle)
 
 again10ms   call	delay100us
-	    nop
 	    decfsz	Count10ms	; Decrement and test if Count10ms = 0?  (1 cycle)
 	    goto	again10ms	; NO => Keep waiting			(2 cycles)
 					; Skip					(1 cycle)
