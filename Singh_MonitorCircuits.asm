@@ -1,7 +1,6 @@
 ;**************************************************************************
 ;		MONITORING A PIR (PYRO-IR) MOTION SENSOR
 ;**************************************************************************
-
 ; Aim:
 ;   - Activate a buzzer whenever motion is detected.
 ;
@@ -9,7 +8,6 @@
 ;   - The buzzer must turn on if and only if motion is detected.
 ;   - The buzzer must be on long enough for you to hear it.
 ;   - The buzzer must be turned off prior to re-checking the sensor for motion.
-;
 ;
 ; Setup:
 ;   - The PIR has HIGH output voltage when motion is not detected
