@@ -196,7 +196,7 @@ again1s		call	    delay10ms
 		goto	    again1s	    ; NO => Keep waiting		    (2 cycles)
 					    ; Skip				    (1 cycle)
 		call	    delay9939600ns  ; YES => Delay for 9939600ns
-		return			    ; YReturn				    (2 cycles)
+		return			    ; Return				    (2 cycles)
 ;--------------------------------------------------------------------------
 
 ;--------------------------------------------------------------------------
