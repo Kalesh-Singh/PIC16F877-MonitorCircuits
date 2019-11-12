@@ -56,13 +56,13 @@
 ;--------------------------------------------------------------------------
 Count100us	equ	    0x20
 
-delay100us	movlw	    d'164'	    ; Load d'164' into W			(1 cycle)
-		movwf	    Count100us	    ; Move W into Count100us			(1 cycle)
+delay100us	movlw	    d'164'	    ; Load d'164' into W		    (1 cycle)
+		movwf	    Count100us	    ; Move W into Count100us		    (1 cycle)
 
-again100us	decfsz	    Count100us	    ; Decrement and test if Count100us = 0?	(1 cycle)
-		goto	    again100us	    ; NO => Keep waiting			(2 cycles)
-					    ; Skip					(1 cycle)
-		return			    ; YES => Return				(2 cycles)
+again100us	decfsz	    Count100us	    ; Decrement, test if Count100us = 0?    (1 cycle)
+		goto	    again100us	    ; NO => Keep waiting		    (2 cycles)
+					    ; Skip				    (1 cycle)
+		return			    ; YES => Return			    (2 cycles)
 
 ;--------------------------------------------------------------------------
 ;			    39600ns Delay
@@ -86,55 +86,44 @@ again100us	decfsz	    Count100us	    ; Decrement and test if Count100us = 0?	(1 
 ;--------------------------------------------------------------------------
 Count39600ns	equ	    0x21
 
-delay39600ns	movlw	    d'63'	    ; Load d'63' into W				(1 cycle)
-		movwf	    Count39600ns    ; Move W into Count39600ns			(1 cycle)
+delay39600ns	movlw	    d'63'	    ; Load d'63' into W			    (1 cycle)
+		movwf	    Count39600ns    ; Move W into Count39600ns		    (1 cycle)
 		nop			    ; (1 cycle)
 
-again39600ns	decfsz	    Count39600ns    ; Decrement and test if Count39600nss = 0?	(1 cycle)
-		goto	    again39600ns    ; NO => Keep waiting			(2 cycles)
-					    ; Skip					(1 cycle)
-		return			    ; YES => Return				(2 cycles)
+again39600ns	decfsz	    Count39600ns    ; Decrement, test if Count39600nss = 0? (1 cycle)
+		goto	    again39600ns    ; NO => Keep waiting		    (2 cycles)
+					    ; Skip				    (1 cycle)
+		return			    ; YES => Return			    (2 cycles)
 
 ;--------------------------------------------------------------------------
 ;			    10ms DELAY
 ;--------------------------------------------------------------------------
 ; Counter Setup = (1[movlw] +1[movwf]) x 200ns = 400ns
-; Last Cycle of Loop Time = 100000ns + (1[decfsz] + 1[skip] + 2[return]) x 200ns = 100800ns
+; Last Cycle of Loop Time = 100000ns + (1[decfsz] + 1[skip] + 2[return]) x 200ns + 39600ns = 140400ns
 ; Calling delay10ms =  2 cycles x 200ns = 400ns
 ;
-; Setup Time = 400ns + 100800ns + 400ns = 101600ns
+; Setup Time = 400ns + 140400ns + 400ns = 141200ns
 ;
-; Remaining Time = 10ms - Setup Time = 10000000ns - 101600ns = 9898400ns
+; Remaining Time = 10ms - Setup Time = 10000000ns - 141200ns = 9858800ns
 ;
 ; Loop Cycle Time (not for last cycle) = 100000ns + (1[decfsz] + 2[goto]) x 200ns = 100600ns
 
 ; Remaining Time = Count10ms x Loop Cycle Time
-; 9898400ns = Count10ms x 100600ns
+; 9858800ns = Count10ms x 100600ns
 
-; Hence, Count10ms = 98.393... = 98
-
-; 9898400ns - (100600ns x 98) = 39600ns
+; Hence, Count10ms = 98
 ;--------------------------------------------------------------------------
-Count10ms	equ	0x22
-;
-;delay10ms   movlw	d'98'		; Load d'98' into W			(1 cycle)
-;	    movwf	Count10ms	; Move W into Count10ms			(1 cycle)
-;
-;again10ms   call	delay100us
-;	    decfsz	Count10ms	; Decrement and test if Count10ms = 0?  (1 cycle)
-;	    goto	again10ms	; NO => Keep waiting			(2 cycles)
-;					; Skip					(1 cycle)
-;
-;	    movlw	d'64'		; Load d'64' into W			(1 cycle)
-;	    movwf	Count39600ns	; Move W into Count39600ns		(1 cycle)
-;	    nop				; (1 cycle)
-;	    nop				; (1 cycle)
-;again39600ns
-;	    decfsz	Count39600ns	; Decrement and test if Count39600ns = 0?  (1 cycle)
-;	    goto	again39600ns	; NO => Keep waiting			(2 cycles)
-;					; Skip					(1 cycle)
-;
-;	    return			; YES => Return				(2 cycles)
+Count10ms	equ	    0x22
+
+delay10ms	movlw	    d'98'	    ; Load d'98' into W			    (1 cycle)
+		movwf	    Count10ms	    ; Move W into Count10ms		    (1 cycle)
+
+again10ms	call	    delay100us
+		decfsz	    Count10ms	    ; Decrement, test if Count10ms = 0?	    (1 cycle)
+		goto	    again10ms	    ; NO => Keep waiting		    (2 cycles)
+					    ; Skip				    (1 cycle)
+		call	    delay39600ns
+		return			    ; YES => Return			    (2 cycles)
 
 ;--------------------------------------------------------------------------
 ;			    1s DELAY
@@ -204,7 +193,7 @@ monitor	bcf	PORTD, RD2	; Turn the buzzer off
 	btfsc   PORTB, RB1	; Does PORTB<1> = 0? YES => Skip next instruction
 	goto	monitor		; NO => Keep monitoring for motion
 	bsf	PORTD, RD2	; YES => Turn on buzzer
-	call	delay100us
+	call	delay10ms
 	goto    monitor		; Keep monitoring for motion
 
         end
