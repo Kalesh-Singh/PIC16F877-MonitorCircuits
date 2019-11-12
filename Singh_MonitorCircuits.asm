@@ -1,13 +1,15 @@
 ;**************************************************************************
 ;		MONITORING A PIR (PYRO-IR) MOTION SENSOR
+;**************************************************************************
+
 ; Aim:
 ;   - Activate a buzzer whenever motion is detected.
-
+;
 ; Objectives:
 ;   - The buzzer must turn on if and only if motion is detected.
 ;   - The buzzer must be on long enough for you to hear it.
 ;   - The buzzer must be turned off prior to re-checking the sensor for motion.
-
+;
 ;
 ; Setup:
 ;   - The PIR has HIGH output voltage when motion is not detected
@@ -15,6 +17,7 @@
 ;   - The output of the PIR is connected to pin RB1.
 ;   - The input of the buzzer is connected to pin RD2.
 ;**************************************************************************
+
 #include <p16f877.inc>
 
 ;--------------------------------------------------------------------------
@@ -24,17 +27,18 @@
 ;   Set the reset vector here.
 ;--------------------------------------------------------------------------
 
-	org     0x0000
-	goto    start
+		org	    0x0000
+		goto	    start
 
 ;--------------------------------------------------------------------------
 ;			    DELAY SUBROUTINES
+;--------------------------------------------------------------------------
 ;
 ; Operating speed:  DC, 20 MHz clock input
 ;		    DC, 200 ns instruction cycle
 ;--------------------------------------------------------------------------
 
-	org     0x0005
+		org	    0x0005
 
 ;--------------------------------------------------------------------------
 ;			    100us Delay
@@ -48,10 +52,10 @@
 ; Remaining Time = 1us - Setup Time = 100000ns - 1600ns = 98400ns
 ;
 ; Loop Cycle Time (not for last cycle) = (1[decfsz] + 2[goto]) x 200ns = 600ns
-
+;
 ; Remaining Time = Count100us x Loop Cycle Time
 ; 98400ns = Count100us x 600ns
-
+;
 ; Hence, Count100us = 164
 ;--------------------------------------------------------------------------
 Count100us	equ	    0x20
@@ -68,20 +72,20 @@ again100us	decfsz	    Count100us	    ; Decrement, test if Count100us = 0?    (1 
 ;			    39600ns Delay
 ;--------------------------------------------------------------------------
 ; Count 39600ns for the extra fractional part of the remaining time
-
+;
 ; Counter Setup = (1[movlw] + 1[movwf] + 1[nop]) x 200ns = 600ns
 ; Last Cycle of Loop Time = (1[decfsz] + 1[skip] + 2[return]) x 200ns = 800ns
 ; Calling delay39600ns =  2 cycles x 200ns = 400ns
-
+;
 ; Setup Time = 600ns + 800ns + 400ns = 1800ns
 ;
 ; Remaining Time = 39600ns - Setup Time = 39600ns - 1800ns = 37800ns
 ;
 ; Loop Cycle Time (not for last cycle) = (1[decfsz] + 2[goto]) x 200ns = 600ns
-
+;
 ; Remaining Time = Count39600ns x Loop Cycle Time
 ; 37800ns = Count39600ns x 600ns
-
+;
 ; Hence, Count39600ns = 63
 ;--------------------------------------------------------------------------
 Count39600ns	equ	    0x21
@@ -107,10 +111,10 @@ again39600ns	decfsz	    Count39600ns    ; Decrement, test if Count39600nss = 0? 
 ; Remaining Time = 10ms - Setup Time = 10000000ns - 141200ns = 9858800ns
 ;
 ; Loop Cycle Time (not for last cycle) = 100000ns + (1[decfsz] + 2[goto]) x 200ns = 100600ns
-
+;
 ; Remaining Time = Count10ms x Loop Cycle Time
 ; 9858800ns = Count10ms x 100600ns
-
+;
 ; Hence, Count10ms = 98
 ;--------------------------------------------------------------------------
 Count10ms	equ	    0x22
@@ -122,8 +126,8 @@ again10ms	call	    delay100us
 		decfsz	    Count10ms	    ; Decrement, test if Count10ms = 0?	    (1 cycle)
 		goto	    again10ms	    ; NO => Keep waiting		    (2 cycles)
 					    ; Skip				    (1 cycle)
-		call	    delay39600ns
-		return			    ; YES => Return			    (2 cycles)
+		call	    delay39600ns    ; YES => Delay for 39600ns
+		return			    ; Return				    (2 cycles)
 
 ;--------------------------------------------------------------------------
 ;			    9939600ns Delay
@@ -131,17 +135,17 @@ again10ms	call	    delay100us
 ; Counter Setup = (1[movlw] + 1[movwf]) x 200ns = 400ns
 ; Last Cycle of Loop Time = 100000ns + (1[decfsz] + 1[skip] + 2[return]) x 200ns = 100800ns
 ; Calling delay9939600ns =  2 cycles x 200ns = 400ns
-
+;
 ; Setup Time = 400ns + 100800ns + 400ns = 101600ns
 ;
 ; Remaining Time = 9939600ns - Setup Time = 9939600ns - 101600ns = 9838000ns
 ;
 ; Loop Cycle Time (not for last cycle) = 100000ns + (1[decfsz] + 2[goto]) x 200ns = 100600ns
-
+;
 ; Remaining Time = Count9939600ns x Loop Cycle Time
 ; 9838000ns = Count9939600ns x 100600ns
 ; Hence, Count9939600ns = 97.7932405567 = 97
-
+;
 ; Fractional Time = 9838000ns - (100600ns x 97)
 ;		  = 79800ns
 ;		  = (2 x 39600ns) + (3 x 200ns)
@@ -156,85 +160,57 @@ again9939600ns	call	    delay100us
 		decfsz	    Count9939600ns  ; Decrement, test if Count9939600ns = 0?(1 cycle)
 		goto	    again9939600ns  ; NO => Keep waiting		    (2 cycles)
 					    ; Skip				    (1 cycle)
-		call	    delay39600ns
+		call	    delay39600ns    ; YES => Delay for 79800ns
 		call	    delay39600ns
 		nop			    ;					    (1 cycle)
 		nop			    ;					    (1 cycle)
 		nop			    ;					    (1 cycle)
 
-		return			    ; YES => Return			    (2 cycles)
+		return			    ; Return			    (2 cycles)
 
 ;--------------------------------------------------------------------------
-
-;			    1s DELAY
+;			    1s Delay
+;--------------------------------------------------------------------------
 ; Counter Setup = (1[movlw] +1[movwf]) x 200ns = 400ns
-; Last Cycle of Loop Time = 10000000ns + (1[decfsz] + 1[skip] + 2[return]) x 200ns = 100000800ns
+; Last Cycle of Loop Time = 10000000ns + (1[decfsz] + 1[skip] + 2[return]) x 200ns + 9939600ns = 19940400ns
 ; Calling delay10ms =  2 cycles x 200ns = 400ns
 ;
-; Setup Time = 400ns + 10000800ns + 400ns = 10001600ns
+; Setup Time = 400ns + 19940400ns + 400ns = 19941200ns
 ;
-; Remaining Time = 1s - Setup Time = 1000000000ns - 10001600ns = 989998400ns
+; Remaining Time = 1s - Setup Time = 1000000000ns - 19941200ns = 980058800ns
 ;
 ; Loop Cycle Time (not for last cycle) = 10000000ns + (1[decfsz] + 2[goto]) x 200ns = 10000600ns
-
+;
 ; Remaining Time = Count1s x Loop Cycle Time
-; 989998400ns = Count1s x 10000600ns
-
-; Hence, Count1s = 98.993900366 = 98
-
-; 989998400ns - (10000600ns x 98) = 9939600ns = (100 x 100us) + 39600ns
-;------------------------------------------------------------------
-; Count 9939600ns for the extra fractional part of the remaining time
-
-; Counter Setup = (1[movlw] +1[movwf]+1[nop]+1[nop]) x 200ns = 800ns
-; Last Cycle of Loop Time = (1[decfsz] + 1[skip]) x 200ns = 400ns
-
-; Setup Time = 800ns + 400ns = 1200ns
+; 980058800ns = Count1s x 10000600ns
 ;
-; Remaining Time = 39600ns - Setup Time = 39600ns - 1200ns = 38400ns
-;
-; Loop Cycle Time (not for last cycle) = (1[decfsz] + 2[goto]) x 200ns = 600ns
-
-; Remaining Time = Count10ms x Loop Cycle Time
-; 38400ns = Count39600ns x 600ns
-; Therefore, Count39600ns = 64
+; Hence, Count1s = 98
 ;--------------------------------------------------------------------------
-;Count1s	equ	0x23
-;Count9939600ns	0x25
-;
-;delay1s	    movlw	d'99'		; Load d'99' into W		(1 cycle)
-;	    movwf	Count1s		; Move W into Count1s		(1 cycle)
-;
-;again1s	    call	delay10ms
-;	    decfsz	Count1s		; Decrement and test if Count1ms = 0?	(1 cycle)
-;	    goto	again1s		; NO => Keep waiting			(2 cycles)
-;					; Skip					(1 cycle)
-;
-;	    movlw	d'99'		; Load d'99' into W		(1 cycle)
-;	    movwf	Count9939600ns	; Move W into Count9939600ns	(1 cycle)
-;again9939600ns
-;	    call	delay100us
-;	    goto	again3999600ns	; NO => Keep waiting		(2 cycles)
-;					; Skip				    (1 cycle)
-;
-;	    return			; YES => Return			(2 cycles)
+Count1s		equ	    0x24
+
+delay1s		movlw	    d'98'	    ; Load d'98' into W			    (1 cycle)
+		movwf	    Count1s	    ; Move W into Count1s		    (1 cycle)
+
+again1s		call	    delay10ms
+		decfsz	    Count1s	    ; Decrement, test if Count1s = 0?	    (1 cycle)
+		goto	    again1s	    ; NO => Keep waiting		    (2 cycles)
+					    ; Skip				    (1 cycle)
+		call	    delay9939600ns  ; YES => Delay for 9939600ns
+		return			    ; YReturn				    (2 cycles)
 ;--------------------------------------------------------------------------
 
 ;--------------------------------------------------------------------------
-; Main Program
+; Main Program - Motion Detection Alarm
 ;--------------------------------------------------------------------------
-start	bsf	STATUS, RP0	; Select Bank 1
-	bsf	TRISB, RB1	; Set TRISB<1> = 1 so PORTB<1> is an INPUT
-	bcf	TRISD, RD2	; Set TRISD<2> = 0 so PORTD<2> is an OUTPUT
-	bcf	STATUS, RP0	; Select Bank 0
+start		bsf	    STATUS, RP0	    ; Select Bank 1
+		bsf	    TRISB, RB1	    ; Set TRISB<1> = 1 so PORTB<1> is an INPUT
+		bcf	    TRISD, RD2	    ; Set TRISD<2> = 0 so PORTD<2> is an OUTPUT
+		bcf	    STATUS, RP0	    ; Select Bank 0
 
-monitor	bcf	PORTD, RD2	; Turn the buzzer off
-	call	delay100us
-	btfsc   PORTB, RB1	; Does PORTB<1> = 0? YES => Skip next instruction
-	goto	monitor		; NO => Keep monitoring for motion
-	bsf	PORTD, RD2	; YES => Turn on buzzer
-	call	delay10ms
-	goto    monitor		; Keep monitoring for motion
-
-        end
-
+monitor		bcf	    PORTD, RD2	    ; Turn the buzzer off
+		btfsc	    PORTB, RB1	    ; Does PORTB<1> = 0? YES => Skip next instruction
+		goto	    monitor	    ; NO => Keep monitoring for motion
+		bsf	    PORTD, RD2	    ; YES => Turn on buzzer
+		call	    delay1s	    ; Keep buzzer on for 1 second
+		goto	    monitor	    ; Keep monitoring for motion
+		end
