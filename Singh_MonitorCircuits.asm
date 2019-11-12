@@ -30,8 +30,8 @@
 ;--------------------------------------------------------------------------
 ;			    DELAY SUBROUTINES
 ;
-; Operating speed:  DC ? 20 MHz clock input
-;		    DC ? 200 ns instruction cycle
+; Operating speed:  DC, 20 MHz clock input
+;		    DC, 200 ns instruction cycle
 ;--------------------------------------------------------------------------
 
 	org     0x0005
@@ -126,6 +126,46 @@ again10ms	call	    delay100us
 		return			    ; YES => Return			    (2 cycles)
 
 ;--------------------------------------------------------------------------
+;			    9939600ns Delay
+;--------------------------------------------------------------------------
+; Counter Setup = (1[movlw] + 1[movwf]) x 200ns = 400ns
+; Last Cycle of Loop Time = 100000ns + (1[decfsz] + 1[skip] + 2[return]) x 200ns = 100800ns
+; Calling delay9939600ns =  2 cycles x 200ns = 400ns
+
+; Setup Time = 400ns + 100800ns + 400ns = 101600ns
+;
+; Remaining Time = 9939600ns - Setup Time = 9939600ns - 101600ns = 9838000ns
+;
+; Loop Cycle Time (not for last cycle) = 100000ns + (1[decfsz] + 2[goto]) x 200ns = 100600ns
+
+; Remaining Time = Count9939600ns x Loop Cycle Time
+; 9838000ns = Count9939600ns x 100600ns
+; Hence, Count9939600ns = 97.7932405567 = 97
+
+; Fractional Time = 9838000ns - (100600ns x 97)
+;		  = 79800ns
+;		  = (2 x 39600ns) + (3 x 200ns)
+;		  i.e 2 calls to delay39600ns and 3 nop's
+;--------------------------------------------------------------------------
+Count9939600ns	equ	    0x23
+
+delay9939600ns	movlw	    d'97'	    ; Load d'97' into W			    (1 cycle)
+		movwf	    Count9939600ns  ; Move W into Count9939600ns	    (1 cycle)
+
+again9939600ns	call	    delay100us
+		decfsz	    Count9939600ns  ; Decrement, test if Count9939600ns = 0?(1 cycle)
+		goto	    again9939600ns  ; NO => Keep waiting		    (2 cycles)
+					    ; Skip				    (1 cycle)
+		call	    delay39600ns
+		call	    delay39600ns
+		nop			    ;					    (1 cycle)
+		nop			    ;					    (1 cycle)
+		nop			    ;					    (1 cycle)
+
+		return			    ; YES => Return			    (2 cycles)
+
+;--------------------------------------------------------------------------
+
 ;			    1s DELAY
 ; Counter Setup = (1[movlw] +1[movwf]) x 200ns = 400ns
 ; Last Cycle of Loop Time = 10000000ns + (1[decfsz] + 1[skip] + 2[return]) x 200ns = 100000800ns
@@ -140,9 +180,9 @@ again10ms	call	    delay100us
 ; Remaining Time = Count1s x Loop Cycle Time
 ; 989998400ns = Count1s x 10000600ns
 
-; Hence, Count1s = 98.993900366 == 99
+; Hence, Count1s = 98.993900366 = 98
 
-; 989998400ns - (10000600ns x 98) = 9939600ns
+; 989998400ns - (10000600ns x 98) = 9939600ns = (100 x 100us) + 39600ns
 ;------------------------------------------------------------------
 ; Count 9939600ns for the extra fractional part of the remaining time
 
@@ -159,7 +199,7 @@ again10ms	call	    delay100us
 ; 38400ns = Count39600ns x 600ns
 ; Therefore, Count39600ns = 64
 ;--------------------------------------------------------------------------
-;Count1s	equ	0x24
+;Count1s	equ	0x23
 ;Count9939600ns	0x25
 ;
 ;delay1s	    movlw	d'99'		; Load d'99' into W		(1 cycle)
@@ -174,7 +214,7 @@ again10ms	call	    delay100us
 ;	    movwf	Count9939600ns	; Move W into Count9939600ns	(1 cycle)
 ;again9939600ns
 ;	    call	delay100us
-;	    goto	again39600ns	; NO => Keep waiting		(2 cycles)
+;	    goto	again3999600ns	; NO => Keep waiting		(2 cycles)
 ;					; Skip				    (1 cycle)
 ;
 ;	    return			; YES => Return			(2 cycles)
