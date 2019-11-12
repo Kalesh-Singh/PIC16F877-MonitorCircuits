@@ -166,7 +166,7 @@ again9939600ns	call	    delay100us
 		nop			    ;					    (1 cycle)
 		nop			    ;					    (1 cycle)
 
-		return			    ; Return			    (2 cycles)
+		return			    ; Return				    (2 cycles)
 
 ;--------------------------------------------------------------------------
 ;			    1s Delay
