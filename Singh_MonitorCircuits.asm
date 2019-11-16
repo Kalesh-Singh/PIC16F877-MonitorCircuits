@@ -19,6 +19,14 @@
 #include <p16f877.inc>
 
 ;--------------------------------------------------------------------------
+; Set Configuration Bits (Disable Watchdog Timer)
+;--------------------------------------------------------------------------
+; CONFIG
+; __config 0xFFFB
+    __CONFIG _FOSC_EXTRC & _WDTE_OFF & _PWRTE_OFF & _CP_OFF & _BOREN_ON & _LVP_ON & _CPD_OFF & _WRT_ON
+
+
+;--------------------------------------------------------------------------
 ; Program Code
 ;--------------------------------------------------------------------------
 ;--------------------------------------------------------------------------
@@ -211,4 +219,5 @@ monitor		bcf	    PORTD, RD2	    ; Turn the buzzer off
 		bsf	    PORTD, RD2	    ; YES => Turn on buzzer
 		call	    delay1s	    ; Keep buzzer on for 1 second
 		goto	    monitor	    ; Keep monitoring for motion
+
 		end
