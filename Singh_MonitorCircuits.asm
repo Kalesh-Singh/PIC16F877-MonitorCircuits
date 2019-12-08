@@ -1,3 +1,6 @@
+; NOTE: Please Clean and Build after unzipping and opening the project for
+;       the first time.
+    
 ;**************************************************************************
 ;		MONITORING A PIR (PYRO-IR) MOTION SENSOR
 ;**************************************************************************
@@ -35,6 +38,26 @@
 
 		org	    0x0000
 		goto	    start
+		
+		nop
+		nop
+		nop
+		nop
+		
+;--------------------------------------------------------------------------
+; Main Program - Motion Detection Alarm
+;--------------------------------------------------------------------------
+start		bsf	    STATUS, RP0	    ; Select Bank 1
+		bsf	    TRISB, RB1	    ; Set TRISB<1> = 1 so PORTB<1> is an INPUT
+		bcf	    TRISD, RD2	    ; Set TRISD<2> = 0 so PORTD<2> is an OUTPUT
+		bcf	    STATUS, RP0	    ; Select Bank 0
+
+monitor		bcf	    PORTD, RD2	    ; Turn the buzzer off
+		btfss	    PORTB, RB1	    ; Does PORTB<1> = 1? YES => Skip next instruction
+		goto	    monitor	    ; NO => Keep monitoring for motion
+		bsf	    PORTD, RD2	    ; YES => Turn on buzzer
+		call	    delay1s	    ; Keep buzzer on for 1 second
+		goto	    monitor	    ; Keep monitoring for motion	
 
 ;--------------------------------------------------------------------------
 ;			    DELAY SUBROUTINES
@@ -43,9 +66,7 @@
 ; Operating speed:  DC, 20 MHz clock input
 ;		    DC, 200 ns instruction cycle
 ;--------------------------------------------------------------------------
-
-		org	    0x0005
-
+;
 ;--------------------------------------------------------------------------
 ;			    100us Delay
 ;--------------------------------------------------------------------------
@@ -206,18 +227,6 @@ again1s		call	    delay10ms
 ;--------------------------------------------------------------------------
 
 ;--------------------------------------------------------------------------
-; Main Program - Motion Detection Alarm
+;			    End
 ;--------------------------------------------------------------------------
-start		bsf	    STATUS, RP0	    ; Select Bank 1
-		bsf	    TRISB, RB1	    ; Set TRISB<1> = 1 so PORTB<1> is an INPUT
-		bcf	    TRISD, RD2	    ; Set TRISD<2> = 0 so PORTD<2> is an OUTPUT
-		bcf	    STATUS, RP0	    ; Select Bank 0
-
-monitor		bcf	    PORTD, RD2	    ; Turn the buzzer off
-		btfsc	    PORTB, RB1	    ; Does PORTB<1> = 0? YES => Skip next instruction
-		goto	    monitor	    ; NO => Keep monitoring for motion
-		bsf	    PORTD, RD2	    ; YES => Turn on buzzer
-		call	    delay1s	    ; Keep buzzer on for 1 second
-		goto	    monitor	    ; Keep monitoring for motion
-
-		end
+		end	
